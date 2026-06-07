@@ -10,7 +10,7 @@ public class Main {
         //Taking the Code from the user.
         System.out.println("Give me the code with last line As END");
         StringBuilder sb = new StringBuilder();// String builder variable to save the input code.
-        
+        try{
         //Take the input code until the new line is "END".
         String line = sc.nextLine();
         while(!line.equals("END")){
@@ -26,6 +26,9 @@ public class Main {
         cod.addInputCode(s);//save the input code into the object.
         Review_Generator res=new Review_Generator();// Create a Object to Generate the review on the input code.
         res.reviewCode(cod);//Method call in the Review_Generator to generate the review for the input code by the llm.
-        System.out.println(cod.returnResponce());//Output the Review on the given code in the terminal.
-    }
+        System.out.println(cod.returnResponce());//Output the Review on the given code in the terminal.    
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+        }
 }
