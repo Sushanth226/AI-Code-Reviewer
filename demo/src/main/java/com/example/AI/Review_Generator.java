@@ -49,10 +49,62 @@ public class Review_Generator {
             HttpResponse<String> response =
                     client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            input.addOutputResponse(response.body());
+            input.addOutputResponse(parseContent(response.body()));
 
         } catch (Exception e) {
          System.out.println("Error: " + e.getMessage());
         }
+    }
+
+    private static String parseContent(String json) {
+        if (json == null) return "";
+        int contentIndex = json.indexOf("\"content\"");
+        if (contentIndex == -1) {
+            return json; // Fallback to raw json if "content" key is not found
+        }
+        int colonIndex = json.indexOf(":", contentIndex + 9);
+        if (colonIndex == -1) return json;
+        int quoteStartIndex = json.indexOf("\"", colonIndex);
+        if (quoteStartIndex == -1) return json;
+
+        StringBuilder sb = new StringBuilder();
+        boolean escaped = false;
+        for (int i = quoteStartIndex + 1; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (escaped) {
+                switch (c) {
+                    case 'n' -> sb.append('\n');
+                    case 't' -> sb.append('\t');
+                    case 'r' -> sb.append('\r');
+                    case 'b' -> sb.append('\b');
+                    case 'f' -> sb.append('\f');
+                    case '"' -> sb.append('"');
+                    case '\\' -> sb.append('\\');
+                    case '/' -> sb.append('/');
+                    case 'u' -> {
+                        if (i + 4 < json.length()) {
+                            try {
+                                String hex = json.substring(i + 1, i + 5);
+                                sb.append((char) Integer.parseInt(hex, 16));
+                                i += 4;
+                            } catch (NumberFormatException e) {
+                                sb.append("\\u");
+                            }
+                        } else {
+                            sb.append("\\u");
+                        }
+                    }
+                    default -> sb.append(c);
+                }
+                escaped = false;
+            } else if (c == '\\') {
+                escaped = true;
+            } else if (c == '"') {
+                break;
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 }
